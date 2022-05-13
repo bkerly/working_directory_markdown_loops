@@ -1,0 +1,124 @@
+---
+title: "`r params$doc_title`"
+author: "Brian Erly, MD MPH"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document: default
+params:
+  doc_title: The Default Title
+  data_set: cars
+---
+
+## Intro
+
+The purpose of this script is to show how you can make loops in R Markdown, both within the markdown document and in a main script.
+
+```{r cars}
+
+library(tidyverse)
+library(gluedown)
+
+pseudoWD <- here::here() # Sets the working directory to whereever "COPHS Master Controller.r" is. 
+
+
+file.Dir <- function(path){
+  paste0(pseudoWD,"/",path)
+}
+
+data <- file.Dir(
+  paste0(
+    "data/",
+    params$data_set,
+    ".csv"
+  )
+) %>% 
+  read_csv()
+
+head(data,6)
+
+summary(data)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+graph_data <- data %>%
+  rename(
+    x_val = starts_with("xval"),
+    y_val = starts_with("yval"),
+    category = starts_with("category")
+  ) %>%
+  select(x_val,y_val,category)
+
+axis_labels <- data %>%
+  select(starts_with("xval"),
+          starts_with("yval"),
+          starts_with("category")) %>%
+  colnames() %>%
+  sub(".*_", "", .)
+
+xaxislab <- axis_labels[1]
+yaxislab <- axis_labels[2]
+categorylab <- axis_labels[3]
+graph_title <- toupper(params$data_set)
+  
+
+ggplot(data = graph_data,
+       aes(x=x_val,
+           y=y_val
+           )
+) + 
+  geom_point() +
+  xlab(xaxislab)+
+  ylab(yaxislab) +
+  labs(title = graph_title) 
+```
+
+And that's neat, but we might want to loop by our category variable.
+
+```{r gluedown loop, results = 'asis', echo = FALSE}
+loops <- data %>%
+  select(starts_with("category_")) %>%
+  unique()
+
+for(i in 1:nrow(loops)){
+  
+    # Creates a new page for each category
+  glue::glue("\n\n\\clearpage\n") %>% print()
+  
+    # Adds a blank line
+  gluedown::md_blank() %>% print()
+  
+  category_selected <- loops[i,] %>% unlist()
+  
+  # Print the title for each one-page subreport
+  gluedown::md_heading(
+    paste0(
+      toupper(params$data_set),
+      ": category",
+      categorylab,
+      " = ",
+      category_selected
+    )
+  ) %>%
+    print()
+  
+  # Do a graph for just that category
+ g <-  graph_data %>%
+    filter(category %in% category_selected) %>%
+    ggplot(
+       aes(x=x_val,
+           y=y_val
+           )) + 
+  geom_point() +
+  xlab(xaxislab)+
+  ylab(yaxislab) 
+ 
+ print(g)
+  
+  
+}
