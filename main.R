@@ -20,6 +20,8 @@ here::here()
 
 setwd("C:/Users/berly")
 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 # If you think your directory is messed up, you can use:
 getwd() # to see it, but even better is to use
 here::dr_here() 
@@ -27,7 +29,7 @@ here::dr_here()
 
 here::here()
 
-pseudoWD <- here::here() # Sets the working directory to whereever "COPHS Master Controller.r" is. 
+pseudoWD <- dirname(rstudioapi::getActiveDocumentContext()$path) # Sets the working directory to whereever "COPHS Master Controller.r" is. 
 
 # This function just turns any relative path (in the pseudoWD directory) into an absolute path.
 file.Dir <- function(path){
@@ -44,7 +46,7 @@ source.Script <- function(path){
 
 cars <- read_csv(
   file.Dir(
-    "data/cars.csv"
+    path = "data/cars.csv"
   )
 )
 
@@ -64,18 +66,20 @@ render_report = function(doc_title,data_set){
       data_set = data_set,
       doc_title = doc_title
     ),
-    output_file = OutputFilename
+    output_file = file.Dir(OutputFilename)
     
   )
   
-  File.Mover(from = OutputFilename,
-             to = paste0("output/",
-                         OutputFilename))
+   File.Mover(from = file.Dir(OutputFilename),
+              to = file.Dir(
+                paste0("reports/",
+                          OutputFilename))
+   )
   
 }
 
 render_report(doc_title = "Super Cool Cars Report Of Horsepower by Displacement and Cylanders",
-              data_set = cars)
+              data_set = "cars")
 
 render_report(doc_title = "Fantastic Flower Analysis",
-              data_set = cars)
+              data_set = "iris")
