@@ -14,7 +14,7 @@ params:
 
 The purpose of this script is to show how you can make loops in R Markdown, both within the markdown document and in a main script.
 
-```{r cars}
+```{r cars,echo=FALSE}
 
 library(tidyverse)
 library(gluedown)
@@ -39,12 +39,13 @@ head(data,6)
 
 summary(data)
 ```
+\newpage
 
-## Including Plots
+## High Level Report
 
-You can also embed plots, for example:
+You can print a high level report of all your data, which is fine for a first order analysis or users who don't need to be restricted.
 
-```{r pressure, echo=FALSE}
+```{r pressure, echo=FALSE, fig.width=4,fig.heigh=4}
 
 graph_data <- data %>%
   rename(
@@ -73,14 +74,17 @@ ggplot(data = graph_data,
            )
 ) + 
   geom_point() +
+  geom_smooth()+ 
   xlab(xaxislab)+
   ylab(yaxislab) +
   labs(title = graph_title) 
 ```
 
-And that's neat, but we might want to loop by our category variable.
+And that's neat, but we might want to create individual pages that are specific to an individual category. To do this, we use the package "gluedown".
 
-```{r gluedown loop, results = 'asis', echo = FALSE}
+"Gluedown" is a small set of thoughtful wrappers around the tidyverse package "glue" that will put them in markdown format for you. By using "gluedown" and the chunk setting "results = 'asis', instead of printing consol-ey code output the output will be nicely formatted markdown text. 
+
+```{r gluedown loop, results = 'asis', echo = FALSE, , fig.width=4,fig.heigh=4}
 loops <- data %>%
   select(starts_with("category_")) %>%
   unique()
@@ -115,6 +119,7 @@ for(i in 1:nrow(loops)){
            y=y_val
            )) + 
   geom_point() +
+  geom_smooth()+ 
   xlab(xaxislab)+
   ylab(yaxislab) 
  
